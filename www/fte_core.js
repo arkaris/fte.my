@@ -13,19 +13,14 @@ function fteGetConfig(){
   return config;
 }
 
-document.addEventListener("DOMContentLoaded", onDOMLoaded);
-
-function onDOMLoaded() {
-  var config = fteGetConfig();
-  var fte = new FTE(config);
-  fte.init();
-}
+document.addEventListener("DOMContentLoaded", function(){fte = new FTE(fteGetConfig());});
 
 /* - - - - - - - - - - - - - - - - - - - - - - - -
  * - - - - - - - - - - M A I N - - - - - - - - - -
  * - - - - - - - - - - - - - - - - - - - - - - - -
  */
 function FTE(config) {
+  var self = this;
   /* - - - - - - - - - - - - - - - - - - - - - - - - -
    * - - - - - - - - - - M O D E L - - - - - - - - - -
    * - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -40,8 +35,10 @@ function FTE(config) {
     
     xhr.onreadystatechange = function() {
       if (xhr.readyState != 4) return;
-      if (xhr.status%100 == 2) {
+      if (~~(xhr.status/100) == 2) {
         successCallback ? successCallback(xhr) : console.log(xhr);
+        console.log('take:');
+        console.log(JSON.parse(xhr.responseText));
       } else {
         errorCallback ? errorCallback(xhr) : console.log(xhr);
       }
@@ -49,13 +46,30 @@ function FTE(config) {
     
     var body = JSON.stringify(data) || '';
     xhr.send(body);
+    console.log('send:');
+    console.log(data);
+    console.log('to: '+url);
   }
   
   function getTemplateList() {
     ajaxRequest('GET', this.config.serviceUrl, null, 
       function(response) {
         var responseText = JSON.parse(response.responseText);
-        this.model.templateList = responseText.data;
+        self.model.templateList = responseText.data;
+        self.templateList.dispatchEvent(templateListSync);
+      },
+      function(response) {
+        console.log(response);
+      });
+  }
+  
+  function getTemplate(template) {
+    ajaxRequest('GET', this.config.serviceUrl+"?template="+template, null, 
+      function(response) {
+        var responseText = JSON.parse(response.responseText);
+        self.model.template = responseText.data.template;
+        self.model.variables = responseText.data.variables;
+        self.templateList.dispatchEvent(templateListChange);
       },
       function(response) {
         console.log(response);
@@ -67,6 +81,10 @@ function FTE(config) {
    * - - - - - - - - - - - - - - - - - - - - - - - -
    */
   this.view = {};
+  this.templateList = {};
+  this.languageList = {};
+  this.variableField = {};
+  this.templateField = {};
   
   this.view.Shell = function() {
     var fragment = document.createDocumentFragment();
@@ -74,7 +92,7 @@ function FTE(config) {
     var menuField = document.createElement('div');
     menuField.className = 'menuField';
     fragment.appendChild(menuField);
-    self.menu = menuField;
+    self.menuField = menuField;
     
     var templateListField = document.createElement('div');
     templateListField.className = "templateListField";
@@ -86,6 +104,7 @@ function FTE(config) {
     templateListField.appendChild(languageList);
     menuField.appendChild(templateListField);
     self.templateList = templateList;
+    self.languageList = languageList;
     
     var variableField = document.createElement('div');
     variableField.className = "variableField";
@@ -93,20 +112,11 @@ function FTE(config) {
     self.variableField = variableField;
     
     var templateField = document.createElement('div');
-    templateField.className = 'textField';
+    templateField.className = 'templateField';
+    templateField.contentEditable = true;
+    templateField.innerHTML = '<p><br></p>';
     fragment.appendChild(templateField);
     self.templateField = templateField;
-    
-    return fragment;
-  };
-  
-  this.view.Template = function() {
-    var fragment = document.createDocumentFragment();
-    
-    var textField = document.createElement('div');
-    textField.contentEditable = true;
-    textField.innerHTML = '<p><br></p>';
-    fragment.appendChild(textField);
     
     return fragment;
   };
@@ -126,44 +136,44 @@ function FTE(config) {
    * - - - - - - - - - - C O N T R O L L E R - - - - - - - - - -
    * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    */
-  function fillTemplateList() {
-    getTemplateList();
-    self.templateList.innerHTML = '';
+  this.hangDownEventListeners = function() {
+    this.menuField.addEventListener("templateListSync", function(e) {
+      self.templateList.innerHTML = '';
+      self.languageList.innerHTML = '';
+//    self.languageList.addClass('hide');
+      
+      for (var key in self.model.templateList) {
+        var opt = new Option(self.model.templateList[key], key);
+        self.templateList.appendChild(opt);
+      }
+      self.templateList.selectedIndex = -1;
+    });
     
-    for (var key in self.model.templateList) {
-      var opt = new Option(data[key], key);
-      self.templateList.appendChild(opt);
-    }
-    self.templateList.selectedIndex = -1;
-  }
+    this.templateList.addEventListener("change", function(e) {
+      getTemplate(self.templateList.value);
+    });
+    
+    this.shell.addEventListener("templateListChange", function(e) {
+      self.templateField.innerText = self.model.template;
+//    self.languageList.remClass('hide');
+      
+      
+    });
+  };
   
   // - - - - - - - - - - E V E N T S - - - - - - - - - -
+  var templateListSync = new CustomEvent("templateListSync", {bubbles: true});
+  var templateListChange = new CustomEvent("templateListChange", {bubbles: true});
   
   // - - - - - - - - - - I N I T - - - - - - - - - -
-  this.init = function() {
-    self = this;
-    this.config = config;
-    
-    this.shell = document.getElementById( config.containerId ).
-      appendChild(document.createElement("div"));
-    this.shell.className = 'fte-container';
-    this.shell.appendChild( new this.view.Shell(this) );
-    
-    fillTemplateList(this);
-  };
+  this.config = config;
+  
+  this.shell = document.getElementById( config.containerId ).
+    appendChild(document.createElement("div"));
+  this.shell.className = 'fte-container';
+  this.shell.appendChild( new this.view.Shell() );
+  
+  this.hangDownEventListeners();
+  
+  getTemplateList();
 }
-
-/*
- * templateList = {
- *   tplKey: {
- *     fileName: value
- *     templateName: value
- *     variables: {
- *       '{key}': {
- *         ru: value,
- *         en: value
- *       }
- *     }
- *   }
- * }
- */
