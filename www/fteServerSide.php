@@ -32,14 +32,15 @@ class FTERequest {
       if ($this->method=="GET") {
         if ( isset($this->templateKey) && empty($this->variableKey) ) {
           $this->getTemplate($this->templateKey);
-        };
+        } else 
         if ( empty($this->templateKey) && empty($this->variableKey) ) {
           $this->getTemplateList();
-        };
-        throw new Exception("Bad Request", 400);
+        } else {
+          throw new Exception("Bad Request", 400);
+        }
       }
       
-      throw new Exception("Method Not Allowed", 405);
+      else throw new Exception("Method Not Allowed", 405);
       
     } catch (Exception $e) {
       header("HTTP/1.1 " . $e->getCode() . " " . $e->getMessage());
