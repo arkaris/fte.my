@@ -1,44 +1,3 @@
-/*
- * Формат запроса:
- * uri:
- *  url.php - обращение к списку шаблонов templateList
- *  url.php?template=templateKey - обращение к шаблону по ключу в templateList
- *  url.php?template=templateKey&variable=variableKey - обращение к переменной variableKey шаблона templateKey
- * method:
- *  GET - чтение данных
- *  PATCH - перезапись данных
- *  POST - запись новых данных
- *  PUT - поиск=>PATCH|PUT
- *  DELETE - удаление данных
- * data:
- *   d: JSON
- */
-/*
- * Формат ответа:
- * status:
- *  header("HTTP/1.1 400 Bad Request"); etc.
- * header:
- *  Allow: GET, PATCH
- *  Content-Type: application/json; charset=UTF-8
- * data:
- *  template: текст шаблона
- *  variables: переменные шаблона (мультиязычные)
- *  templateList: перечень шаблонов БЕЗ переменных, БЕЗ имен файлов
- */
-/*
- * response.data.template: JSON string
- * 
- * respone.data.variables: {
- *  '{$user}': {ru: "Дмитрий", en: "Dmitry"},
- *  '{$fio}': {ru: "Мячков Д.М.", en: "D. Myachkov"},
- * }
- * 
- * response.data.templateList: {
- *  "tplKey1": {ru: "Имя шаблона", en: "Template Title"},
- *  "tplKey2": {ru: "Имя шаблона", en: "Template Title"},
- * }
- */
-
 /* - - - - - - - - - - - - - - - - - - - - - - - - - -
  * - - - - - - - - - - C O N F I G - - - - - - - - - -
  * - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -48,7 +7,7 @@ function fteGetConfig(){
     //id of div element for FTE
     containerId: "FTEContainer",
     //data request addres
-    serviceUrl: "FTEServerSide.php"
+    serviceUrl: "_FTEServerSide.php"
   };
   
   return config;
@@ -74,15 +33,15 @@ function FTE(config) {
   this.model = {};
   
   // - - - - - - - - - - A J A X - - - - - - - - - -
-  function ajaxRequest(method, data, successCallback, errorCallback) {
+  function ajaxRequest(method, url, data, successCallback, errorCallback) {
     var xhr = new XMLHttpRequest();
-    xhr.open(method,this.config.servicePath, true);
+    xhr.open(method, url, true);
     xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
     
     xhr.onreadystatechange = function() {
       if (xhr.readyState != 4) return;
       if (xhr.status%100 == 2) {
-        successCallback ? successCallback(xhr.responseText) : console.log(xhr);
+        successCallback ? successCallback(xhr) : console.log(xhr);
       } else {
         errorCallback ? errorCallback(xhr) : console.log(xhr);
       }
@@ -93,7 +52,7 @@ function FTE(config) {
   }
   
   function getTemplateList() {
-    ajaxRequest('GET', 'templateList', 
+    ajaxRequest('GET', this.config.serviceUrl, null, 
       function(response) {
         var responseText = JSON.parse(response.responseText);
         this.model.templateList = responseText.data;
@@ -122,7 +81,7 @@ function FTE(config) {
     var templateList = document.createElement('select');
     templateList.className = "templateList";
     var languageList = document.createElement('select');
-    language.className = "languageList";
+    languageList.className = "languageList";
     templateListField.appendChild(templateList);
     templateListField.appendChild(languageList);
     menuField.appendChild(templateListField);
