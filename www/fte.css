@@ -1,22 +1,28 @@
 .fte-container {
+  height: 300px;
   border: 1px solid blue;
+  position: relative;
 }
 
 .fte-container .menuField {
-  width: 100%;
+  width: 100px;
+  height: 100%;
   border: 1px solid red;
+  float: right;
 }
 
-.fte-container .templateListField {}
+.fte-container .templateListField {
+}
 
-.fte-container .templateList {}
-.fte-container .languageList {}
+.fte-container .templateList,
+.fte-container .languageList {
+  width: 100%
+}
 
 .fte-container .variableField {}
 
-.fte-container .textField {
-  width: 100%;
-  height: 300px;
+.fte-container .templateField {
+  height: 100%;
   border: 1px solid red;
   overflow-y: scroll;
 }
