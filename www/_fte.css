@@ -1,0 +1,22 @@
+.fteContainer {
+  border: 1px solid blue;
+}
+
+.fteContainer .menuField {
+  width: 100%;
+  border: 1px solid red;
+}
+
+.fteContainer .textField {
+  width: 100%;
+  height: 300px;
+  border: 1px solid red;
+  overflow: scroll;
+}
+
+.fteContainer .menuButton {
+}
+
+.fteContainer .variable {
+  color: blue;
+}

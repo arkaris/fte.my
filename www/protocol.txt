@@ -1,0 +1,40 @@
+/*
+ * Формат запроса:
+ * uri:
+ *  url.php - обращение к списку шаблонов templateList
+ *  url.php?template=templateKey - обращение к шаблону по ключу в templateList
+ *  url.php?template=templateKey&variable=variableKey - обращение к переменной variableKey шаблона templateKey
+ * method:
+ *  GET - чтение данных
+ *  PATCH - перезапись данных
+ *  POST - запись новых данных
+ *  PUT - поиск=>PATCH|PUT
+ *  DELETE - удаление данных
+ * data:
+ *   d: JSON
+ */
+/*
+ * Формат ответа:
+ * status:
+ *  header("HTTP/1.1 400 Bad Request"); etc.
+ * header:
+ *  Allow: GET, PATCH
+ *  Content-Type: application/json; charset=UTF-8
+ * data:
+ *  template: текст шаблона
+ *  variables: переменные шаблона (мультиязычные)
+ *  templateList: перечень шаблонов БЕЗ переменных, БЕЗ имен файлов
+ */
+/*
+ * response.data.template: JSON string
+ * 
+ * respone.data.variables: {
+ *  '{$user}': {ru: "Дмитрий", en: "Dmitry"},
+ *  '{$fio}': {ru: "Мячков Д.М.", en: "D. Myachkov"},
+ * }
+ * 
+ * response.data.templateList: {
+ *  "tplKey1": {ru: "Имя шаблона", en: "Template Title"},
+ *  "tplKey2": {ru: "Имя шаблона", en: "Template Title"},
+ * }
+ */

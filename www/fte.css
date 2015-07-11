@@ -1,0 +1,25 @@
+.fte-container {
+  border: 1px solid blue;
+}
+
+.fte-container .menuField {
+  width: 100%;
+  border: 1px solid red;
+}
+
+.fte-container .templateListField {}
+
+.fte-container .templateList {}
+.fte-container .languageList {}
+
+.fte-container .variableField {}
+
+.fte-container .textField {
+  width: 100%;
+  height: 300px;
+  border: 1px solid red;
+  overflow-y: scroll;
+}
+
+.fte-container .button {}
+
