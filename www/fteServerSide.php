@@ -6,7 +6,7 @@ class FTERequest {
       "templateName" => "Тестовый шаблон 1",
       "variables" => array (
         '{$user}' => array ("ru"=>"Дмитрий", "en"=>"Dmitry"),
-        '{$site}' => array ("i13n"=>"megaSite.ru"),
+        '{$site}' => array ("i13l"=>"megaSite.ru"),
         '{$ex}'   => array ("ru"=>"Лучшая выставка", "en"=>"Best exhibition")
       )
     ),
@@ -15,16 +15,17 @@ class FTERequest {
       "templateName" => "Тестовый шаблон 2",
       "variables" => array (
         '{$user}' => array ("ru"=>"Дмитрий", "en"=>"Dmitry"),
-        '{$site}' => array ("i13n"=>"megaSite.ru"),
+        '{$site}' => array ("i13l"=>"megaSite.ru"),
         '{$ex}'   => array ("ru"=>"Лучшая выставка", "en"=>"Best exhibition")
       )
     )
   );
   
   public function __construct($request) {
+    $this->request = $request;
     $this->method = $_SERVER["REQUEST_METHOD"];
-    $this->templateKey = $this->getRequestParam("templateKey");
-    $this->variableKey = $this->getRequestParam("variableKey");
+    $this->templateKey = $this->getRequestParam("template");
+    $this->variableKey = $this->getRequestParam("variable");
     
     try {
       
@@ -41,8 +42,10 @@ class FTERequest {
       throw new Exception("Method Not Allowed", 405);
       
     } catch (Exception $e) {
-      header("HTTP/1.1 " . $e.getMessage() . " " . $e.getCode());
+      header("HTTP/1.1 " . $e->getCode() . " " . $e->getMessage());
     }
+//  if ( isset($this->data) ) {}
+    $this->response = $this->renderToString();
   }
   
   public function getRequestParam($name) {
@@ -50,6 +53,49 @@ class FTERequest {
       return stripcslashes(htmlspecialchars(trim($this->request[$name])));
     }
     return null;
+  }
+  
+  public function setResponse($key, $value) {
+    $this->data[$key] = $value;
+  }
+  
+  public function renderToString() {
+    $json = array(
+      "data" => $this->data,
+    );
+    return json_encode($json);
+  }
+  
+  public function showResponse() {
+    header("Content-Type: application/json; charset=UTF-8");
+    echo $this->response;
+  }
+  
+  /*
+   * - - - - - C A L L B A C K - - - - -
+   */
+  public function getTemplateList() {
+    foreach ($this->templateList as $key => $value) {
+      $this->setResponse($key, $value["templateName"]);
+    }
+    
+    //header("Allow: GET");
+    throw new Exception("OK", 200);
+  }
+  
+  public function getTemplate($templateKey) {
+    if ( $this->templateList[$templateKey] && file_exists($this->templateList[$templateKey]["fileName"]) ) {
+      $this->template = file_get_contents($this->templateList[$templateKey]["fileName"]);
+      $this->template = iconv("windows-1251", "UTF-8", $this->template);
+      
+      //header("Allow: GET");
+      $this->setResponse("template", $this->template);
+      $this->setResponse("variables", $this->templateList[$target]["variables"]);
+      
+      throw new Exception("OK", 200);
+    } else {
+      throw new Exception("Not Found", 404);
+    }
   }
 }
 

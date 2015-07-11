@@ -7,7 +7,7 @@ function fteGetConfig(){
     //id of div element for FTE
     containerId: "FTEContainer",
     //data request addres
-    serviceUrl: "_FTEServerSide.php"
+    serviceUrl: "FTEServerSide.php"
   };
   
   return config;
