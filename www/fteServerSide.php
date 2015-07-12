@@ -5,18 +5,18 @@ class FTERequest {
       "fileName" => "testCP.tpl",
       "templateName" => "Тестовый шаблон 1",
       "variables" => array (
-        '{$user}' => array ("ru"=>"Дмитрий", "en"=>"Dmitry"),
-        '{$site}' => array ("i13l"=>"megaSite.ru"),
-        '{$ex}'   => array ("ru"=>"Лучшая выставка", "en"=>"Best exhibition")
+        '{$user}' => array ("ru"=>"Дмитрий", "eng"=>"Dmitry"),
+        '{$site}' => array ("i11l"=>"megaSite.ru"),
+        '{$ex}'   => array ("ru"=>"Лучшая выставка", "eng"=>"Best exhibition")
       )
     ),
     "testCP2" => array (
       "fileName" => "testCP.tpl",
       "templateName" => "Тестовый шаблон 2",
       "variables" => array (
-        '{$user}' => array ("ru"=>"Дмитрий", "en"=>"Dmitry"),
-        '{$site}' => array ("i13l"=>"megaSite.ru"),
-        '{$ex}'   => array ("ru"=>"Лучшая выставка", "en"=>"Best exhibition")
+        '{$user}' => array ("ru"=>"Дмитрий", "eng"=>"Dmitry"),
+        '{$site}' => array ("i11l"=>"megaSite.ru"),
+        '{$ex}'   => array ("ru"=>"Лучшая выставка", "eng"=>"Best exhibition")
       )
     )
   );
