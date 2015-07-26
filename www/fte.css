@@ -5,12 +5,17 @@
 }
 
 .fte-container .menuField {
-  width: 100px;
+	position: relative;
+  /*width: 100px;*/
   height: 100%;
   border: 1px solid red;
   float: right;
 	
-	overflow-y: scroll;
+	/*overflow-y: scroll;*/
+}
+
+.fte-container .menuWidth {
+	width: 100px;
 }
 
 .fte-container .templateListField {
@@ -31,6 +36,12 @@
 
 .fte-container .variable {
 	color: blue;
+}
+
+.fte-container .editField {
+	position: absolute;
+	width: 100%;
+	bottom: 0;
 }
 
 .fte-container .templateField {

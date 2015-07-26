@@ -7,7 +7,8 @@ class FTERequest {
       "variables" => array (
         '{$user}' => array ("ru"=>"Дмитрий", "eng"=>"Dmitry"),
         '{$site}' => array ("ru"=>"megaSite.ru", "eng"=>"megaSite.ru"),
-        '{$ex}'   => array ("ru"=>"Лучшая выставка", "eng"=>"Best exhibition")
+        '{$ex}'   => array ("ru"=>"Лучшая выставка", "eng"=>"Best exhibition"),
+				'{$email}'=> array ("ru"=>"our@email.ru", "eng"=>"our@email.ru")
       )
     ),
     "testCP2" => array (
@@ -16,7 +17,8 @@ class FTERequest {
       "variables" => array (
         '{$user}' => array ("ru"=>"Дмитрий", "eng"=>"Dmitry"),
         '{$site}' => array ("ru"=>"megaSite.ru", "eng"=>"megaSite.ru"),
-        '{$ex}'   => array ("ru"=>"Лучшая выставка", "eng"=>"Best exhibition")
+        '{$ex}'   => array ("ru"=>"Лучшая выставка", "eng"=>"Best exhibition"),
+				'{$email}'=> array ("ru"=>"our@email.ru", "eng"=>"our@email.ru")
       )
     )
   );

@@ -1,4 +1,4 @@
-/* - - - - - - - - - - - - - - - - - - - - - - - - - -
+﻿/* - - - - - - - - - - - - - - - - - - - - - - - - - -
  * - - - - - - - - - - C O N F I G - - - - - - - - - -
  * - - - - - - - - - - - - - - - - - - - - - - - - - -
  */
@@ -29,6 +29,9 @@ function FTE(config) {
    */
   this.model = {};
   this.model.template = {};
+	this.model.variables = {};
+	this.model.templateList = {};
+	this.model.languageList = {};
   
   // - - - - - - - - - - A J A X - - - - - - - - - -
   function ajaxRequest(method, url, data, successCallback, errorCallback) {
@@ -82,6 +85,18 @@ function FTE(config) {
         console.log(response);
       });
   }
+	
+	// - - - - - - - - - - S E T T E R S - - - - - - - - - -
+	
+	function patchTemplate(template, data) {
+		ajaxRequest('PATCH', this.config.serviceUrl+"?template="+template, data,
+		function(response) {
+			console.log(response.status);
+		},
+		function(response) {
+			console.log(response);
+		});
+	}
   
   /* - - - - - - - - - - - - - - - - - - - - - - - -
    * - - - - - - - - - - V I E W - - - - - - - - - -
@@ -92,13 +107,14 @@ function FTE(config) {
   this.templateList = {};
   this.languageList = {};
   this.variableField = {};
+	this.editField = {};
   this.templateField = {};
   
   this.view.Shell = function() {
     var fragment = document.createDocumentFragment();
     
     var menuField = document.createElement('div');
-    menuField.className = 'menuField';
+    menuField.className = 'menuField menuWidth';
     fragment.appendChild(menuField);
     self.menuField = menuField;
     
@@ -118,6 +134,11 @@ function FTE(config) {
     variableField.className = "variableField";
     menuField.appendChild(variableField);
     self.variableField = variableField;
+		
+		var editField = document.createElement('div');
+		editField.className = "editField";
+		menuField.appendChild(editField);
+		self.editField = editField;
     
     var templateField = document.createElement('div');
     templateField.className = 'templateField';
@@ -129,22 +150,31 @@ function FTE(config) {
     return fragment;
   };
   
-  this.view.MenuButton = function (name, caption) {
+  this.view.MenuButton = function (name, caption, styleName) {
     var fragment = document.createDocumentFragment();
     
     var menuButton = document.createElement('button');
-    menuButton.className = 'button variable';
+    menuButton.className = styleName ? 'button ' + styleName : 'button';
     menuButton.innerText = caption;
 		menuButton.dataset.caption = caption;
-    menuButton.dataset.variableName = name;
+    menuButton.dataset.buttonName = name;
     fragment.appendChild(menuButton);
     
     return fragment;
   };
 	
-	this.view.variableStr = function(name, caption) {
+	this.view.variableSpan = function(name, caption) {
 		return '<span class="variable" data-variable-name="'+name+'" contentEditable="false">'+caption+'</span>';
-	}
+	};
+	
+	this.view.VariableNode = function(value) {
+		var fragment = document.createDocumentFragment();
+		
+		var node = document.createTextNode(value);
+		fragment.appendChild(node);
+		
+		return fragment;
+	};
   
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    * - - - - - - - - - - C O N T R O L L E R - - - - - - - - - -
@@ -157,6 +187,7 @@ function FTE(config) {
 	    self.languageList.innerHTML = '';
 			self.variableField.innerHTML = '';
 	    self.templateField.innerHTML = '';
+			self.editField.innerHTML = '';
 //    self.languageList.addClass('hide');
       for (var key in self.model.templateList) {
         var opt = new Option(self.model.templateList[key], key);
@@ -169,6 +200,7 @@ function FTE(config) {
     	self.languageList.innerHTML = '';
 			self.variableField.innerHTML = '';
 			self.templateField.innerHTML = '';
+			self.editField.innerHTML = '';
       getTemplate(self.templateList.value);
     });
     this.templateList.addEventListener("templateChange", function(e) {
@@ -186,6 +218,7 @@ function FTE(config) {
     this.languageList.addEventListener("languageChange", function(e) {
 			self.variableField.innerHTML = '';
 			self.templateField.innerHTML = '';
+			self.editField.innerHTML = '';
 			
     	e = e || event;
     	var target = e.target || e.srcElement;
@@ -193,19 +226,27 @@ function FTE(config) {
     	for (key in self.model.variables) {
 				var variable = self.model.variables[key];
 				var lang = self.languageList.value;
-    		self.variableField.appendChild( new self.view.MenuButton( key, self.model.variables[key][lang]) );
+    		self.variableField.appendChild( new self.view.MenuButton( key, self.model.variables[key][lang], 'variable') );
     	};
 			
 			self.templateField.innerHTML = self.model.template[target.value].join('<br>');
+			
+			self.editField.appendChild( new self.view.MenuButton('save', lang=='ru'?'Сохранить':'Save', 'edit') );
     });
 		
 		this.menuField.addEventListener("click", function(e) {
 			e = e || window.event;
 			var target = e.target || e.srcElement;
 			while (target != this) {
-				if (target.dataset.variableName) {//add variable button
-					addVariable(target.dataset.variableName, target.dataset.caption);
+				if (target.dataset.buttonName && hasClass(target, 'variable')) {//add variable button
+					addVariable(target.dataset.buttonName, target.dataset.caption);
 					break;
+				}
+				
+				if (target.dataset.buttonName=='save' && hasClass(target, 'edit')) {
+					parseVarOut();
+					var data = parseLangOut();
+					patchTemplate(self.templateList.value, data);
 				}
 				target = target.parentNode;
 			}
@@ -215,7 +256,7 @@ function FTE(config) {
 			e = e || window.event;
 			var target = e.target || e.srcElement;
 			while (target != this) {
-				if (target.dataset.variableName) {//variable
+				if (hasClass(target, 'variable')) {//variable
 					pasteCaretAfter(target);
 					break;
 				}
@@ -230,6 +271,7 @@ function FTE(config) {
   var languageChange = new CustomEvent("languageChange", {bubbles: true});// cant fire default "change" event when set value by hand
   
   // - - - - - - - - - - U T I L - - - - - - - - - -
+	// Parse
   function parseLangIn(_template) {
     var strArr = _template.split('\r\n');
     var str;
@@ -286,15 +328,32 @@ function FTE(config) {
     }
   };
 	
+	function parseLangOut() {
+		
+	}
+	
 	function parseVarIn() {
 		for (var lang in self.model.template) {// For every template by lang
 			for (var i = 0; i < self.model.template[lang].length; i++) {// For every line in template
 				for (var variable in self.model.variables) {// For every variable[lang]
 					self.model.template[lang][i] = self.model.template[lang][i].replace( 
-						variable, self.view.variableStr(variable, self.model.variables[variable][lang]) );
+						variable, self.view.variableSpan(variable, self.model.variables[variable][lang]) );
 				}
 			}
 		}
+	}
+	
+	function parseVarOut() {
+		for (var lang in self.model.template) {// For every template by lang
+			var template = self.templateField.cloneNode(true);
+			var variables = template.querySelectorAll('.variable');
+			for (var i = 0; i < variables.length; i++) {
+				variables[i].parentNode.replaceChild( self.view.VariableNode(variables[i].getAttribute('data-variable-name')), variables[i] );
+			};
+			self.model.template['new_'+lang]=template.innerHTML;
+		};
+		console.log('template:');
+		console.log(self.model.template);
 	}
 	
 	// Caret functions
@@ -302,7 +361,7 @@ function FTE(config) {
 		if (!self.templateField.contentEditable/*заменить проверкой места курсора*/) {
 			return false;
 		} else {
-      var varCode = self.view.variableStr(name, caption);
+      var varCode = self.view.variableSpan(name, caption);
       pasteHtmlAtCaret(varCode);
     }
 	}
@@ -325,7 +384,7 @@ function FTE(config) {
           lastNode = frag.appendChild(node);
         }
         range.insertNode(frag);
-        pasteCaretAfter(lastNode);
+        if (lastNode) pasteCaretAfter(lastNode);
       }
     } else if (document.selection && document.selection.type != "Control") {
       // IE < 9
@@ -337,14 +396,19 @@ function FTE(config) {
     var sel, range;
     sel = window.getSelection();
     if (sel.getRangeAt && sel.rangeCount) {
-      range = sel.getRangeAt(0);
-      range = range.cloneRange();
+      range = sel.getRangeAt(0).cloneRange();
       range.setStartAfter(el);
       range.collapse(true);
       sel.removeAllRanges();
       sel.addRange(range);
     }
   }
+	
+	//Class functions
+	function hasClass(obj, cls) {
+		var classes = obj.className.split(' ');
+		return classes.filter(function(el){return el==cls}).length;
+	}
   
   // - - - - - - - - - - I N I T - - - - - - - - - -
   this.config = config;
