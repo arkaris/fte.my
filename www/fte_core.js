@@ -155,8 +155,12 @@ function FTE(config) {
       self.templateList.selectedIndex = -1;
     });
     
-    this.shell.addEventListener("templateChange", function(e) {
+    this.templateList.addEventListener("change", function(e) {
+    	self.templateField.innerHTML = '';
     	self.languageList.innerHTML = '';
+      getTemplate(self.templateList.value);
+    });
+    this.shell.addEventListener("templateChange", function(e) {
       for (var key in self.model.template) {
       	var opt = new Option(key);
       	self.languageList.appendChild(opt);
@@ -165,15 +169,9 @@ function FTE(config) {
       self.languageList.dispatchEvent(languageChange);
     });
     
-    this.templateList.addEventListener("change", function(e) {
-    	self.templateField.innerHTML = '';
-      getTemplate(self.templateList.value);
-    });
-    
     this.languageList.addEventListener("change", function(e) {
     	self.languageList.dispatchEvent(languageChange);
     });
-    
     this.shell.addEventListener("languageChange", function(e) {
     	e = e || event;
     	var target = e.target || e.srcElement
@@ -183,7 +181,7 @@ function FTE(config) {
   
   // - - - - - - - - - - E V E N T S - - - - - - - - - -
   var templateListSync = new CustomEvent("templateListSync", {bubbles: true});
-  var templateChange = new CustomEvent("templateChange", {bubbles: true});
+  var templateChange = new CustomEvent("templateChange", {bubbles: true});// to fire callback after async request
   var languageChange = new CustomEvent("languageChange", {bubbles: true});
   
   // - - - - - - - - - - U T I L - - - - - - - - - -
