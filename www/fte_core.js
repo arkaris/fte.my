@@ -7,7 +7,9 @@ function fteGetConfig(){
     //id of div element for FTE
     containerId: "FTEContainer",
     //request data addres
-    serviceUrl: "FTEServerSide.php"
+    serviceUrl: "FTEServerSide.php",
+    //default language
+    defaultLang: 'ru'
   };
   
   return config;
@@ -72,7 +74,8 @@ function FTE(config) {
       function(response) {
         var responseText = JSON.parse(response.responseText);
         parseLangIn(responseText.data.template);
-        self.model._variables = responseText.data.variables;
+        self.model.variables = responseText.data.variables;
+				parseVarIn();
         self.templateList.dispatchEvent(templateChange);
       },
       function(response) {
@@ -122,20 +125,26 @@ function FTE(config) {
     templateField.innerHTML = '<p><br></p>';
     fragment.appendChild(templateField);
     self.templateField = templateField;
-    
+
     return fragment;
   };
   
-  this.view.MenuButton = function () {
+  this.view.MenuButton = function (name, caption) {
     var fragment = document.createDocumentFragment();
     
     var menuButton = document.createElement('button');
-    menuButton.className = 'button';
-    menuButton.value = 'Button';
+    menuButton.className = 'button variable';
+    menuButton.innerText = caption;
+		menuButton.dataset.caption = caption;
+    menuButton.dataset.variableName = name;
     fragment.appendChild(menuButton);
     
     return fragment;
   };
+	
+	this.view.variableStr = function(name, caption) {
+		return '<span class="variable" data-variable-name="'+name+'" contentEditable="false">'+caption+'</span>';
+	}
   
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    * - - - - - - - - - - C O N T R O L L E R - - - - - - - - - -
@@ -146,6 +155,7 @@ function FTE(config) {
     this.shell.addEventListener("templateListSync", function(e) {
 	    self.templateList.innerHTML = '';
 	    self.languageList.innerHTML = '';
+			self.variableField.innerHTML = '';
 	    self.templateField.innerHTML = '';
 //    self.languageList.addClass('hide');
       for (var key in self.model.templateList) {
@@ -156,8 +166,9 @@ function FTE(config) {
     });
     
     this.templateList.addEventListener("change", function(e) {
-    	self.templateField.innerHTML = '';
     	self.languageList.innerHTML = '';
+			self.variableField.innerHTML = '';
+			self.templateField.innerHTML = '';
       getTemplate(self.templateList.value);
     });
     this.templateList.addEventListener("templateChange", function(e) {
@@ -173,16 +184,50 @@ function FTE(config) {
     	self.languageList.dispatchEvent(languageChange);
     });
     this.languageList.addEventListener("languageChange", function(e) {
+			self.variableField.innerHTML = '';
+			self.templateField.innerHTML = '';
+			
     	e = e || event;
-    	var target = e.target || e.srcElement
-    	self.templateField.innerText = self.model.template[target.value].join('\n\r');
+    	var target = e.target || e.srcElement;
+    	
+    	for (key in self.model.variables) {
+				var variable = self.model.variables[key];
+				var lang = self.languageList.value;
+    		self.variableField.appendChild( new self.view.MenuButton( key, self.model.variables[key][lang]) );
+    	};
+			
+			self.templateField.innerHTML = self.model.template[target.value].join('<br>');
     });
+		
+		this.menuField.addEventListener("click", function(e) {
+			e = e || window.event;
+			var target = e.target || e.srcElement;
+			while (target != this) {
+				if (target.dataset.variableName) {//add variable button
+					addVariable(target.dataset.variableName, target.dataset.caption);
+					break;
+				}
+				target = target.parentNode;
+			}
+		});
+		
+		this.templateField.addEventListener("click", function(e) {
+			e = e || window.event;
+			var target = e.target || e.srcElement;
+			while (target != this) {
+				if (target.dataset.variableName) {//variable
+					pasteCaretAfter(target);
+					break;
+				}
+				target = target.parentNode;
+			}
+		});
   };
   
   // - - - - - - - - - - E V E N T S - - - - - - - - - -
   var templateListSync = new CustomEvent("templateListSync", {bubbles: true});
   var templateChange = new CustomEvent("templateChange", {bubbles: true});// to fire callback after async request
-  var languageChange = new CustomEvent("languageChange", {bubbles: true});// cant fire default "chenge" event when set value by hand
+  var languageChange = new CustomEvent("languageChange", {bubbles: true});// cant fire default "change" event when set value by hand
   
   // - - - - - - - - - - U T I L - - - - - - - - - -
   function parseLangIn(_template) {
@@ -216,7 +261,7 @@ function FTE(config) {
     		lang = result[1];
     		self.model.template[lang] = [];
     		result = str.match(/\{\s*else\s*if\s*\$lang\s*==\s*\w+\}(.+)$/i);
-    		if (~result) continue;
+    		if (!result) continue;
     		str = result[1];
     	}
     	// Search {else}
@@ -224,10 +269,10 @@ function FTE(config) {
     	if (~result) {
     		result = str.match(/^(.+)\{\s*else\s*\}/i);
     		if ( result && lang ) self.model.template[lang].push( result[1] );
-    		lang = 'def';
+    		lang = self.config.defaultLang;
     		self.model.template[lang] = [];
     		result = str.match(/\{\s*else\s*\}(.+)$/i);
-    		if (~result) continue;
+    		if (!result) continue;
     		str = result[1];
     	}
     	//Search {/if}
@@ -239,9 +284,67 @@ function FTE(config) {
     	}
     	if (lang) self.model.template[lang].push(str);
     }
-//    console.log('template:');
-//    console.log(self.model.template);
   };
+	
+	function parseVarIn() {
+		for (var lang in self.model.template) {// For every template by lang
+			for (var i = 0; i < self.model.template[lang].length; i++) {// For every line in template
+				for (var variable in self.model.variables) {// For every variable[lang]
+					self.model.template[lang][i] = self.model.template[lang][i].replace( 
+						variable, self.view.variableStr(variable, self.model.variables[variable][lang]) );
+				}
+			}
+		}
+	}
+	
+	// Caret functions
+	function addVariable(name, caption) {
+		if (!self.templateField.contentEditable/*заменить проверкой места курсора*/) {
+			return false;
+		} else {
+      var varCode = self.view.variableStr(name, caption);
+      pasteHtmlAtCaret(varCode);
+    }
+	}
+	
+	function pasteHtmlAtCaret(html) {
+    var sel, range;
+    if (window.getSelection) {
+      // IE9 and non-IE
+      sel = window.getSelection();
+      if (sel.getRangeAt && sel.rangeCount) {
+        range = sel.getRangeAt(0);
+        range.deleteContents();
+        
+        // Range.createContextualFragment() would be useful here but is
+        // non-standard and not supported in all browsers (IE9, for one)
+        var el = document.createElement("div");
+        el.innerHTML = html;
+        var frag = document.createDocumentFragment(), node, lastNode;
+        while ( (node = el.firstChild) ) {
+          lastNode = frag.appendChild(node);
+        }
+        range.insertNode(frag);
+        pasteCaretAfter(lastNode);
+      }
+    } else if (document.selection && document.selection.type != "Control") {
+      // IE < 9
+      document.selection.createRange().pasteHTML(html);
+    }
+  }
+	
+	function pasteCaretAfter(el) {
+    var sel, range;
+    sel = window.getSelection();
+    if (sel.getRangeAt && sel.rangeCount) {
+      range = sel.getRangeAt(0);
+      range = range.cloneRange();
+      range.setStartAfter(el);
+      range.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+  }
   
   // - - - - - - - - - - I N I T - - - - - - - - - -
   this.config = config;

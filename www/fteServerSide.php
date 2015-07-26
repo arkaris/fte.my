@@ -6,7 +6,7 @@ class FTERequest {
       "templateName" => "Тестовый шаблон 1",
       "variables" => array (
         '{$user}' => array ("ru"=>"Дмитрий", "eng"=>"Dmitry"),
-        '{$site}' => array ("i11l"=>"megaSite.ru"),
+        '{$site}' => array ("ru"=>"megaSite.ru", "eng"=>"megaSite.ru"),
         '{$ex}'   => array ("ru"=>"Лучшая выставка", "eng"=>"Best exhibition")
       )
     ),
@@ -15,7 +15,7 @@ class FTERequest {
       "templateName" => "Тестовый шаблон 2",
       "variables" => array (
         '{$user}' => array ("ru"=>"Дмитрий", "eng"=>"Dmitry"),
-        '{$site}' => array ("i11l"=>"megaSite.ru"),
+        '{$site}' => array ("ru"=>"megaSite.ru", "eng"=>"megaSite.ru"),
         '{$ex}'   => array ("ru"=>"Лучшая выставка", "eng"=>"Best exhibition")
       )
     )

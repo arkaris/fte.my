@@ -9,6 +9,8 @@
   height: 100%;
   border: 1px solid red;
   float: right;
+	
+	overflow-y: scroll;
 }
 
 .fte-container .templateListField {
@@ -19,13 +21,21 @@
   width: 100%
 }
 
-.fte-container .variableField {}
+.fte-container .variableField {
+	height: auto;
+}
+
+.fte-container .button {
+	width: 100%;
+}
+
+.fte-container .variable {
+	color: blue;
+}
 
 .fte-container .templateField {
   height: 100%;
   border: 1px solid red;
   overflow-y: scroll;
+	overflow-x: hidden;
 }
-
-.fte-container .button {}
-
