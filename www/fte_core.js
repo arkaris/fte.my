@@ -6,7 +6,7 @@ function fteGetConfig(){
   config = {
     //id of div element for FTE
     containerId: "FTEContainer",
-    //data request addres
+    //request data addres
     serviceUrl: "FTEServerSide.php"
   };
   
@@ -26,6 +26,8 @@ function FTE(config) {
    * - - - - - - - - - - - - - - - - - - - - - - - - -
    */
   this.model = {};
+  this.model._template = {};
+  this.model.template = {};
   
   // - - - - - - - - - - A J A X - - - - - - - - - -
   function ajaxRequest(method, url, data, successCallback, errorCallback) {
@@ -36,19 +38,20 @@ function FTE(config) {
     xhr.onreadystatechange = function() {
       if (xhr.readyState != 4) return;
       if (~~(xhr.status/100) == 2) {
-        successCallback ? successCallback(xhr) : console.log(xhr);
-        console.log('take:');
+      	console.log('success:');
         console.log(JSON.parse(xhr.responseText));
+        successCallback ? successCallback(xhr) : console.log(xhr);
       } else {
+      	console.log('error:');
+        console.log(JSON.parse(xhr.responseText));
         errorCallback ? errorCallback(xhr) : console.log(xhr);
       }
     };
     
     var body = JSON.stringify(data) || '';
     xhr.send(body);
-    console.log('send:');
+    console.log('from: ' + url);
     console.log(data);
-    console.log('to: '+url);
   }
   
   function getTemplateList() {
@@ -67,8 +70,8 @@ function FTE(config) {
     ajaxRequest('GET', this.config.serviceUrl+"?template="+template, null, 
       function(response) {
         var responseText = JSON.parse(response.responseText);
-        self.model.template = responseText.data.template;
-        self.model.variables = responseText.data.variables;
+        self.model._template = responseText.data.template;
+        self.model._variables = responseText.data.variables;
         self.templateList.dispatchEvent(templateListChange);
       },
       function(response) {
@@ -81,6 +84,7 @@ function FTE(config) {
    * - - - - - - - - - - - - - - - - - - - - - - - -
    */
   this.view = {};
+  this.menuField = {};
   this.templateList = {};
   this.languageList = {};
   this.variableField = {};
@@ -137,11 +141,12 @@ function FTE(config) {
    * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    */
   this.hangDownEventListeners = function() {
+  	
     this.menuField.addEventListener("templateListSync", function(e) {
-      self.templateList.innerHTML = '';
-      self.languageList.innerHTML = '';
+	    self.templateList.innerHTML = '';
+	    self.languageList.innerHTML = '';
+	    self.templateField.innerHTML = '';
 //    self.languageList.addClass('hide');
-      
       for (var key in self.model.templateList) {
         var opt = new Option(self.model.templateList[key], key);
         self.templateList.appendChild(opt);
@@ -150,20 +155,95 @@ function FTE(config) {
     });
     
     this.templateList.addEventListener("change", function(e) {
+    	self.templateField.innerHTML = '';
       getTemplate(self.templateList.value);
     });
     
+    this.languageList.addEventListener("change", function(e) {
+    	self.languageList.dispatchEvent(templateChange);
+    });
+    
     this.shell.addEventListener("templateListChange", function(e) {
-      self.templateField.innerText = self.model.template;
-//    self.languageList.remClass('hide');
-      
-      
+      parseLangIn();
+      for (var key in self.model.template) {
+      	var opt = new Option(key);
+      	self.languageList.appendChild(opt);
+      }
+      self.languageList.selectedIndex = self.languageList.length-1;
+      self.languageList.dispatchEvent(templateChange);
+//      self.templateField.innerText = self.model.template[key].join('\n\r');
+    });
+    
+    this.shell.addEventListener("templateChange", function(e) {
+    	e = e || event;
+    	var target = e.target || e.srcElement
+    	self.templateField.innerText = self.model.template[target.value].join('\n\r');
     });
   };
   
   // - - - - - - - - - - E V E N T S - - - - - - - - - -
   var templateListSync = new CustomEvent("templateListSync", {bubbles: true});
   var templateListChange = new CustomEvent("templateListChange", {bubbles: true});
+  var templateChange = new CustomEvent("templateChange", {bubbles: true});
+  
+  // - - - - - - - - - - U T I L - - - - - - - - - -
+  function parseLangIn() {
+    var strArr = self.model._template.split('\r\n');
+    var str;
+    var result;
+    var lang;
+    var i = 0;
+    // Search {if}
+    for (i; i < strArr.length; i++) {
+    	result = strArr[i].match(/\{\s*if\s+\$lang\s*==\s*(\w+)\}/i);
+    	if (result) {
+    		lang = result[1];
+    		self.model.template[lang] = [];
+    		result = strArr[i].match(/\{\s*if\s+\$lang\s*==\s*\w+\}(.+)$/i);
+    		if (result)
+    			self.model.template[lang].push(result[1]);
+    		i++;
+    		break;
+    	}
+    }
+    // Search {else if}, {else}, {/if}
+    for (i; i < strArr.length; i++) {
+    	str = strArr[i];
+    	// Search {else if}
+    	result = str.search(/\{\s*else\s*if\s*\$lang\s*==\s*\w+\}/i);
+    	if (~result) {
+    		result = str.match(/^(.+)\{\s*else\s*if\s*\$lang\s*==\s*\w+\}/i);
+    		if ( result && lang ) self.model.template[lang].push( result[1] );
+    		result = strArr[i].match(/\{\s*else\s*if\s*\$lang\s*==\s*(\w+)\}/i);
+    		lang = result[1];
+    		self.model.template[lang] = [];
+    		result = str.match(/\{\s*else\s*if\s*\$lang\s*==\s*\w+\}(.+)$/i);
+    		if (~result) continue;
+    		str = result[1];
+    	}
+    	// Search {else}
+    	result = str.search(/\{\s*else\s*\}/i);
+    	if (~result) {
+    		result = str.match(/^(.+)\{\s*else\s*\}/i);
+    		if ( result && lang ) self.model.template[lang].push( result[1] );
+    		lang = 'def';
+    		self.model.template[lang] = [];
+    		result = str.match(/\{\s*else\s*\}(.+)$/i);
+    		if (~result) continue;
+    		str = result[1];
+    	}
+    	//Search {/if}
+    	result = str.search(/\{\s*\/\s*if\s*\}/i);
+    	if (~result) {
+    		result = str.match(/^(.+)\{\s*\/\s*if\s*\}/i);
+    		if ( result && lang ) self.model.template[lang].push( result[1] );
+    		break;
+    	}
+    	if (lang) self.model.template[lang].push(str);
+    }
+//    console.log('template:');
+//    console.log(self.model.template);
+  };
   
   // - - - - - - - - - - I N I T - - - - - - - - - -
   this.config = config;
