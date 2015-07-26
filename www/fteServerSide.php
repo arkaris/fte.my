@@ -91,7 +91,7 @@ class FTERequest {
       
       //header("Allow: GET");
       $this->setResponse("template", $this->template);
-      $this->setResponse("variables", $this->templateList[$target]["variables"]);
+      $this->setResponse("variables", $this->templateList[$templateKey]["variables"]);
       
       throw new Exception("OK", 200);
     } else {
