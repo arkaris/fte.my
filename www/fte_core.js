@@ -26,7 +26,6 @@ function FTE(config) {
    * - - - - - - - - - - - - - - - - - - - - - - - - -
    */
   this.model = {};
-  this.model._template = {};
   this.model.template = {};
   
   // - - - - - - - - - - A J A X - - - - - - - - - -
@@ -54,6 +53,8 @@ function FTE(config) {
     console.log(data);
   }
   
+  // - - - - - - - - - - G E T T E R S - - - - - - - - - -
+  
   function getTemplateList() {
     ajaxRequest('GET', this.config.serviceUrl, null, 
       function(response) {
@@ -70,9 +71,9 @@ function FTE(config) {
     ajaxRequest('GET', this.config.serviceUrl+"?template="+template, null, 
       function(response) {
         var responseText = JSON.parse(response.responseText);
-        self.model._template = responseText.data.template;
+        parseLangIn(responseText.data.template);
         self.model._variables = responseText.data.variables;
-        self.templateList.dispatchEvent(templateListChange);
+        self.templateList.dispatchEvent(templateChange);
       },
       function(response) {
         console.log(response);
@@ -154,27 +155,26 @@ function FTE(config) {
       self.templateList.selectedIndex = -1;
     });
     
+    this.shell.addEventListener("templateChange", function(e) {
+    	self.languageList.innerHTML = '';
+      for (var key in self.model.template) {
+      	var opt = new Option(key);
+      	self.languageList.appendChild(opt);
+      }
+      self.languageList.selectedIndex = self.languageList.length-1;
+      self.languageList.dispatchEvent(languageChange);
+    });
+    
     this.templateList.addEventListener("change", function(e) {
     	self.templateField.innerHTML = '';
       getTemplate(self.templateList.value);
     });
     
     this.languageList.addEventListener("change", function(e) {
-    	self.languageList.dispatchEvent(templateChange);
+    	self.languageList.dispatchEvent(languageChange);
     });
     
-    this.shell.addEventListener("templateListChange", function(e) {
-      parseLangIn();
-      for (var key in self.model.template) {
-      	var opt = new Option(key);
-      	self.languageList.appendChild(opt);
-      }
-      self.languageList.selectedIndex = self.languageList.length-1;
-      self.languageList.dispatchEvent(templateChange);
-//      self.templateField.innerText = self.model.template[key].join('\n\r');
-    });
-    
-    this.shell.addEventListener("templateChange", function(e) {
+    this.shell.addEventListener("languageChange", function(e) {
     	e = e || event;
     	var target = e.target || e.srcElement
     	self.templateField.innerText = self.model.template[target.value].join('\n\r');
@@ -183,12 +183,12 @@ function FTE(config) {
   
   // - - - - - - - - - - E V E N T S - - - - - - - - - -
   var templateListSync = new CustomEvent("templateListSync", {bubbles: true});
-  var templateListChange = new CustomEvent("templateListChange", {bubbles: true});
   var templateChange = new CustomEvent("templateChange", {bubbles: true});
+  var languageChange = new CustomEvent("languageChange", {bubbles: true});
   
   // - - - - - - - - - - U T I L - - - - - - - - - -
-  function parseLangIn() {
-    var strArr = self.model._template.split('\r\n');
+  function parseLangIn(_template) {
+    var strArr = _template.split('\r\n');
     var str;
     var result;
     var lang;
