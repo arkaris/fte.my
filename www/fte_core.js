@@ -55,7 +55,7 @@ function FTE(config) {
     var body = JSON.stringify(data) || '';
     xhr.send(body);
     console.log('from: ' + url);
-    console.log(data);
+    if (data) console.log(data);
   }
   
   // - - - - - - - - - - G E T T E R S - - - - - - - - - -
@@ -201,7 +201,7 @@ function FTE(config) {
 			self.variableField.innerHTML = '';
 			self.templateField.innerHTML = '';
 			self.editField.innerHTML = '';
-      getTemplate(self.templateList.value);
+      getTemplate(self.templateList.value);//fires templateChange as success callback
     });
     this.templateList.addEventListener("templateChange", function(e) {
       for (var key in self.model.template) {
