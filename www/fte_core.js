@@ -60,7 +60,7 @@ function FTE(config) {
       function(response) {
         var responseText = JSON.parse(response.responseText);
         self.model.templateList = responseText.data;
-        self.templateList.dispatchEvent(templateListSync);
+        self.shell.dispatchEvent(templateListSync);
       },
       function(response) {
         console.log(response);
@@ -143,7 +143,7 @@ function FTE(config) {
    */
   this.hangDownEventListeners = function() {
   	
-    this.menuField.addEventListener("templateListSync", function(e) {
+    this.shell.addEventListener("templateListSync", function(e) {
 	    self.templateList.innerHTML = '';
 	    self.languageList.innerHTML = '';
 	    self.templateField.innerHTML = '';
@@ -160,7 +160,7 @@ function FTE(config) {
     	self.languageList.innerHTML = '';
       getTemplate(self.templateList.value);
     });
-    this.shell.addEventListener("templateChange", function(e) {
+    this.templateList.addEventListener("templateChange", function(e) {
       for (var key in self.model.template) {
       	var opt = new Option(key);
       	self.languageList.appendChild(opt);
@@ -172,7 +172,7 @@ function FTE(config) {
     this.languageList.addEventListener("change", function(e) {
     	self.languageList.dispatchEvent(languageChange);
     });
-    this.shell.addEventListener("languageChange", function(e) {
+    this.languageList.addEventListener("languageChange", function(e) {
     	e = e || event;
     	var target = e.target || e.srcElement
     	self.templateField.innerText = self.model.template[target.value].join('\n\r');
@@ -182,7 +182,7 @@ function FTE(config) {
   // - - - - - - - - - - E V E N T S - - - - - - - - - -
   var templateListSync = new CustomEvent("templateListSync", {bubbles: true});
   var templateChange = new CustomEvent("templateChange", {bubbles: true});// to fire callback after async request
-  var languageChange = new CustomEvent("languageChange", {bubbles: true});
+  var languageChange = new CustomEvent("languageChange", {bubbles: true});// cant fire default "chenge" event when set value by hand
   
   // - - - - - - - - - - U T I L - - - - - - - - - -
   function parseLangIn(_template) {
