@@ -28,9 +28,9 @@ class FTERequest {
     $this->method = $_SERVER["REQUEST_METHOD"];
     $this->templateKey = $this->getRequestParam("template");
     $this->variableKey = $this->getRequestParam("variable");
+		$this->data = $this->getRequestParam("data");
     
     try {
-      
       if ($this->method=="GET") {
         if ( isset($this->templateKey) && empty($this->variableKey) ) {
           $this->getTemplate($this->templateKey);
@@ -41,6 +41,15 @@ class FTERequest {
           throw new Exception("Bad Request", 400);
         }
       }
+			
+			if ($this->method=="PATCH") {
+				if ( empty($this->data) )
+					throw new Exception("Forbidden", 403);
+				
+				if ( isset($this->templateKey) && empty($this->variableKey) ) {
+					$this->updateTemplate($this->templateKey);
+				}
+			}
       
       else throw new Exception("Method Not Allowed", 405);
       
@@ -100,6 +109,12 @@ class FTERequest {
       throw new Exception("Not Found", 404);
     }
   }
+	
+	public function updateTemplate($templateKey) {
+		if ( $this->templateList[$templateKey] && file_exists($this->templateList[$templateKey]["fileName"]) ) {
+			throw new Exception("OK", 200);
+		}
+	}
 }
 
 $ajaxRequest = new FTERequest($_REQUEST);
