@@ -47,7 +47,7 @@ function FTE(config) {
         successCallback ? successCallback(xhr) : console.log(xhr);
       } else {
       	console.log('error:');
-        console.log(JSON.parse(xhr.responseText));
+        console.log(xhr);
         errorCallback ? errorCallback(xhr) : console.log(xhr);
       }
     };
@@ -76,9 +76,10 @@ function FTE(config) {
     ajaxRequest('GET', this.config.serviceUrl+"?template="+template, null, 
       function(response) {
         var responseText = JSON.parse(response.responseText);
-        parseLangIn(responseText.data.template);
         self.model.variables = responseText.data.variables;
-				parseVarIn();
+				var _template = responseText.data.template;
+				_template = parseLangIn(_template);
+				self.model.template = parseVarIn(_template, self.model.variables, self.view.variableSpan);
         self.templateList.dispatchEvent(templateChange);
       },
       function(response) {
@@ -166,15 +167,6 @@ function FTE(config) {
 	this.view.variableSpan = function(name, caption) {
 		return '<span class="variable" data-variable-name="'+name+'" contentEditable="false">'+caption+'</span>';
 	};
-	
-	this.view.VariableNode = function(value) {
-		var fragment = document.createDocumentFragment();
-		
-		var node = document.createTextNode(value);
-		fragment.appendChild(node);
-		
-		return fragment;
-	};
   
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    * - - - - - - - - - - C O N T R O L L E R - - - - - - - - - -
@@ -197,13 +189,15 @@ function FTE(config) {
     });
     
     this.templateList.addEventListener("change", function(e) {
-    	self.languageList.innerHTML = '';
-			self.variableField.innerHTML = '';
-			self.templateField.innerHTML = '';
-			self.editField.innerHTML = '';
       getTemplate(self.templateList.value);//fires templateChange as success callback
     });
     this.templateList.addEventListener("templateChange", function(e) {
+			self.languageList.innerHTML = '';
+			self.languageList.dataset.current = '';
+			self.variableField.innerHTML = '';
+			self.templateField.innerHTML = '';
+			self.editField.innerHTML = '';
+			
       for (var key in self.model.template) {
       	var opt = new Option(key);
       	self.languageList.appendChild(opt);
@@ -216,12 +210,13 @@ function FTE(config) {
     	self.languageList.dispatchEvent(languageChange);
     });
     this.languageList.addEventListener("languageChange", function(e) {
+			if ( self.languageList.dataset.current )
+				self.model.template[self.languageList.dataset.current] = parseLinesOut(self.templateField.innerHTML);
+			self.languageList.dataset.current = self.languageList.value;
+			
 			self.variableField.innerHTML = '';
 			self.templateField.innerHTML = '';
 			self.editField.innerHTML = '';
-			
-    	e = e || event;
-    	var target = e.target || e.srcElement;
     	
     	for (key in self.model.variables) {
 				var variable = self.model.variables[key];
@@ -229,7 +224,7 @@ function FTE(config) {
     		self.variableField.appendChild( new self.view.MenuButton( key, self.model.variables[key][lang], 'variable') );
     	};
 			
-			self.templateField.innerHTML = self.model.template[target.value].join('<br>');
+			self.templateField.innerHTML = parseLinesIn(self.model.template[self.languageList.value]);
 			
 			self.editField.appendChild( new self.view.MenuButton('save', lang=='ru'?'Сохранить':'Save', 'edit') );
     });
@@ -243,9 +238,10 @@ function FTE(config) {
 					break;
 				}
 				
-				if (target.dataset.buttonName=='save' && hasClass(target, 'edit')) {
-					parseVarOut();
-					var data = parseLangOut();
+				if ( target.dataset.buttonName=='save' && hasClass(target, 'edit') && self.languageList.value ) {
+					self.model.template[self.languageList.value] = parseLinesOut(self.templateField.innerHTML);
+					var data = parseVarOut(self.model.template);
+					data = parseLangOut(data);
 					patchTemplate(self.templateList.value, data);
 				}
 				target = target.parentNode;
@@ -274,6 +270,7 @@ function FTE(config) {
 	// Parse
   function parseLangIn(_template) {
     var strArr = _template.split('\r\n');
+		var template = {};
     var str;
     var result;
     var lang;
@@ -283,10 +280,10 @@ function FTE(config) {
     	result = strArr[i].match(/\{\s*if\s+\$lang\s*==\s*(\w+)\}/i);
     	if (result) {
     		lang = result[1];
-    		self.model.template[lang] = [];
+    		template[lang] = [];
     		result = strArr[i].match(/\{\s*if\s+\$lang\s*==\s*\w+\}(.+)$/i);
     		if (result)
-    			self.model.template[lang].push(result[1]);
+    			template[lang].push(result[1]);
     		i++;
     		break;
     	}
@@ -298,10 +295,10 @@ function FTE(config) {
     	result = str.search(/\{\s*else\s*if\s*\$lang\s*==\s*\w+\}/i);
     	if (~result) {
     		result = str.match(/^(.+)\{\s*else\s*if\s*\$lang\s*==\s*\w+\}/i);
-    		if ( result && lang ) self.model.template[lang].push( result[1] );
+    		if ( result && lang ) template[lang].push( result[1] );
     		result = strArr[i].match(/\{\s*else\s*if\s*\$lang\s*==\s*(\w+)\}/i);
     		lang = result[1];
-    		self.model.template[lang] = [];
+    		template[lang] = [];
     		result = str.match(/\{\s*else\s*if\s*\$lang\s*==\s*\w+\}(.+)$/i);
     		if (!result) continue;
     		str = result[1];
@@ -310,9 +307,9 @@ function FTE(config) {
     	result = str.search(/\{\s*else\s*\}/i);
     	if (~result) {
     		result = str.match(/^(.+)\{\s*else\s*\}/i);
-    		if ( result && lang ) self.model.template[lang].push( result[1] );
+    		if ( result && lang ) template[lang].push( result[1] );
     		lang = self.config.defaultLang;
-    		self.model.template[lang] = [];
+    		template[lang] = [];
     		result = str.match(/\{\s*else\s*\}(.+)$/i);
     		if (!result) continue;
     		str = result[1];
@@ -321,39 +318,59 @@ function FTE(config) {
     	result = str.search(/\{\s*\/\s*if\s*\}/i);
     	if (~result) {
     		result = str.match(/^(.+)\{\s*\/\s*if\s*\}/i);
-    		if ( result && lang ) self.model.template[lang].push( result[1] );
+    		if ( result && lang ) template[lang].push( result[1] );
     		break;
     	}
-    	if (lang) self.model.template[lang].push(str);
+    	if (lang) template[lang].push(str);
     }
+		
+		return template;
   };
 	
-	function parseLangOut() {
-		
+	function parseLangOut(template) {
+		return template;
 	}
 	
-	function parseVarIn() {
-		for (var lang in self.model.template) {// For every template by lang
-			for (var i = 0; i < self.model.template[lang].length; i++) {// For every line in template
-				for (var variable in self.model.variables) {// For every variable[lang]
-					self.model.template[lang][i] = self.model.template[lang][i].replace( 
-						variable, self.view.variableSpan(variable, self.model.variables[variable][lang]) );
+	function parseVarIn(template, variables, fragment) {
+		for (var lang in template) {// For every template by lang
+			for (var i = 0; i < template[lang].length; i++) {// For every line in template
+				for (var variable in variables) {// For every variable[lang]
+					template[lang][i] = template[lang][i].replace( 
+						variable, fragment(variable, self.model.variables[variable][lang]) );
 				}
 			}
 		}
+		
+		return template;
 	}
 	
-	function parseVarOut() {
-		for (var lang in self.model.template) {// For every template by lang
-			var template = self.templateField.cloneNode(true);
-			var variables = template.querySelectorAll('.variable');
-			for (var i = 0; i < variables.length; i++) {
-				variables[i].parentNode.replaceChild( self.view.VariableNode(variables[i].getAttribute('data-variable-name')), variables[i] );
-			};
-			self.model.template['new_'+lang]=template.innerHTML;
-		};
-		console.log('template:');
-		console.log(self.model.template);
+	function parseVarOut(template) {
+		var node = document.createElement('div');
+		for (var lang in template) {												// for every template by lang
+			for (var l = 0; l < template[lang].length; l++) {	// for every line
+				node.innerHTML = template[lang][l];
+				var variables = node.querySelectorAll('.variable');
+				for (var i = 0; i < variables.length; i++) {		// for every variable (span)
+					variables[i].parentNode.replaceChild( document.createTextNode(variables[i].getAttribute('data-variable-name')), variables[i] );
+				}
+				template[lang][l] = node.innerHTML;
+			}
+		}
+		
+		return template;
+	}
+	
+	function parseLinesIn(template) {
+		template = '<p>' + template.join('<br>') + '</p>';
+		return template;
+	}
+	
+	function parseLinesOut(template) {
+		var result = template.match(/^\<p\>(.*)\<\/p\>$/);								// remove first <p> and last </p>
+		template = result ? result[1] : template;													// if they exist
+		template = template.split('</p><p>').join('<br>').split('<br>');	// </p><p> == <br> => new line
+		
+		return template;
 	}
 	
 	// Caret functions
