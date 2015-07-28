@@ -43,7 +43,7 @@ function FTE(config) {
       if (xhr.readyState != 4) return;
       if (~~(xhr.status/100) == 2) {
       	console.log('success:');
-        console.log(JSON.parse(xhr.responseText));
+        console.log( JSON.parse(xhr.responseText) || xhr.responseText );
         successCallback ? successCallback(xhr) : console.log(xhr);
       } else {
       	console.log('error:');
@@ -90,6 +90,7 @@ function FTE(config) {
 	// - - - - - - - - - - S E T T E R S - - - - - - - - - -
 	
 	function patchTemplate(template, data) {
+		//console.log(data);
 		ajaxRequest('PATCH', this.config.serviceUrl+"?template="+template, data,
 		function(response) {
 			console.log(response.status);
@@ -243,6 +244,7 @@ function FTE(config) {
 					var data = parseVarOut(self.model.template);
 					data = parseLangOut(data);
 					patchTemplate(self.templateList.value, data);
+					break;
 				}
 				target = target.parentNode;
 			}
@@ -324,11 +326,28 @@ function FTE(config) {
     	if (lang) template[lang].push(str);
     }
 		
+		if (!lang) template[self.config.defaultLang] = [];
+		
 		return template;
   };
 	
 	function parseLangOut(template) {
-		return template;
+		var str = "";
+		for (lang in template) {
+			if (lang == self.config.defaultLang) continue;
+			
+			if (!str) {
+				str = '{if $lang==' + lang + '}\r\n';
+			} else {
+				str += '{elseif $lang==' + lang + '}\r\n';
+			}
+			str += template[lang].join('\r\n');
+		}
+		if (template[self.config.defaultLang])
+			str += '{else}\r\n' + template[self.config.defaultLang].join('\r\n');
+		str += '{/if}';
+		
+		return str;
 	}
 	
 	function parseVarIn(template, variables, fragment) {
@@ -361,7 +380,8 @@ function FTE(config) {
 	}
 	
 	function parseLinesIn(template) {
-		template = '<p>' + template.join('<br>') + '</p>';
+		template = template.join('<br>') || '<br>';
+		template = '<p>' + template + '</p>';
 		return template;
 	}
 	
@@ -369,6 +389,9 @@ function FTE(config) {
 		var result = template.match(/^\<p\>(.*)\<\/p\>$/);								// remove first <p> and last </p>
 		template = result ? result[1] : template;													// if they exist
 		template = template.split('</p><p>').join('<br>').split('<br>');	// </p><p> == <br> => new line
+/* 		template.forEach(function(item, i, arr) {
+			arr[i] = item + '\r\n';
+		}); */
 		
 		return template;
 	}

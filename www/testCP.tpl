@@ -1,4 +1,5 @@
-{if $lang==eng}Dear {$user}!
+{if $lang==eng}
+Dear {$user}!
 
 Thank you for registration at {$site}.
 Now you can order via your e-mail complimentary tickets to all exhibitions held at Exhibition Complex which are connected to your profession.  
@@ -18,14 +19,12 @@ If the link does not work or you have any problems registering, please e-mail to
 We hope you enjoy your work with us! 
 
 Best regards,
-{$smarty.const.RC_ADMINISTRATION}
-
-{else}
+{$smarty.const.RC_ADMINISTRATION}{else}
 Уважаемый(ая) {$user}
 
 Мы благодарим Вас за регистрацию на сайте {$site}
 
-Для завершения регистрации и чтобы получить пригласительный билет на выставку «Экспо 2015», пройдите, пожалуйста, по указанной ниже ссылке
+Для завершения регистрации и чтобы получить пригласительный билет на выставку «{$ex}», пройдите, пожалуйста, по указанной ниже ссылке
 
 Активация логина:
 {$link}
@@ -43,5 +42,4 @@ Best regards,
 {*$email}
 {$password}
 {$smarty.const.TECHNICAL_SUPPORT}
-{$smarty.const.RC_ADMINISTRATION*}
-{/if}
+{$smarty.const.RC_ADMINISTRATION*}{/if}

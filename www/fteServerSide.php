@@ -28,9 +28,10 @@ class FTERequest {
     $this->method = $_SERVER["REQUEST_METHOD"];
     $this->templateKey = $this->getRequestParam("template");
     $this->variableKey = $this->getRequestParam("variable");
-		$this->data = $this->getRequestParam("data");
+		$this->body = json_decode( file_get_contents('php://input') , true );
     
     try {
+      
       if ($this->method=="GET") {
         if ( isset($this->templateKey) && empty($this->variableKey) ) {
           $this->getTemplate($this->templateKey);
@@ -43,11 +44,13 @@ class FTERequest {
       }
 			
 			if ($this->method=="PATCH") {
-				if ( empty($this->data) )
+				if ( empty($this->body) )
 					throw new Exception("Forbidden", 403);
 				
 				if ( isset($this->templateKey) && empty($this->variableKey) ) {
 					$this->updateTemplate($this->templateKey);
+				} else {
+					throw new Exception("Bad Request", 400);
 				}
 			}
       
@@ -56,7 +59,7 @@ class FTERequest {
     } catch (Exception $e) {
       header("HTTP/1.1 " . $e->getCode() . " " . $e->getMessage());
     }
-//  if ( isset($this->data) ) {}
+		
     $this->response = $this->renderToString();
   }
   
@@ -112,8 +115,10 @@ class FTERequest {
 	
 	public function updateTemplate($templateKey) {
 		if ( $this->templateList[$templateKey] && file_exists($this->templateList[$templateKey]["fileName"]) ) {
-			throw new Exception("OK", 200);
+			$this->template = iconv("UTF-8", "windows-1251", $this->body);
+			file_put_contents($this->templateList[$templateKey]["fileName"], $this->template);
 		}
+		throw new Exception("No Content", 204);//reset
 	}
 }
 
