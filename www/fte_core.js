@@ -43,7 +43,9 @@ function FTE(config) {
       if (xhr.readyState != 4) return;
       if (~~(xhr.status/100) == 2) {
       	console.log('success:');
-        console.log( JSON.parse(xhr.responseText) || xhr.responseText );
+				if (xhr.responseText)
+					console.log( JSON.parse(xhr.responseText);
+					//console.log(xhr);
         successCallback ? successCallback(xhr) : console.log(xhr);
       } else {
       	console.log('error:');
@@ -55,7 +57,7 @@ function FTE(config) {
     var body = JSON.stringify(data) || '';
     xhr.send(body);
     console.log('from: ' + url);
-    if (data) console.log(data);
+    //if (data) console.log(data);
   }
   
   // - - - - - - - - - - G E T T E R S - - - - - - - - - -
@@ -90,7 +92,6 @@ function FTE(config) {
 	// - - - - - - - - - - S E T T E R S - - - - - - - - - -
 	
 	function patchTemplate(template, data) {
-		//console.log(data);
 		ajaxRequest('PATCH', this.config.serviceUrl+"?template="+template, data,
 		function(response) {
 			console.log(response.status);
