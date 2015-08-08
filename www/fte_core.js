@@ -4,12 +4,14 @@
  */
 function fteGetConfig(){
   config = {
-    //id of div element for FTE
+    // Id of div element for FTE
     containerId: "FTEContainer",
     //request data addres
     serviceUrl: "FTEServerSide.php",
-    //default language
-    defaultLang: 'ru'
+    // Default language
+    defaultLang: 'ru',
+		// Language variable. Be careful with special chars!
+		langKey: '$lang'
   };
   
   return config;
@@ -42,22 +44,15 @@ function FTE(config) {
     xhr.onreadystatechange = function() {
       if (xhr.readyState != 4) return;
       if (~~(xhr.status/100) == 2) {
-      	console.log('success:');
-				if (xhr.responseText)
-					console.log( JSON.parse(xhr.responseText);
-					//console.log(xhr);
-        successCallback ? successCallback(xhr) : console.log(xhr);
+				if (successCallback) successCallback(xhr);
       } else {
-      	console.log('error:');
-        console.log(xhr);
-        errorCallback ? errorCallback(xhr) : console.log(xhr);
+				if (errorCallback) errorCallback(xhr)
+				else alert('AJAX error: '+xhr.status);
       }
     };
     
     var body = JSON.stringify(data) || '';
     xhr.send(body);
-    console.log('from: ' + url);
-    //if (data) console.log(data);
   }
   
   // - - - - - - - - - - G E T T E R S - - - - - - - - - -
@@ -70,7 +65,7 @@ function FTE(config) {
         self.shell.dispatchEvent(templateListSync);
       },
       function(response) {
-        console.log(response);
+        alert("Can't get template list. Response status: "+xhr.status);
       });
   }
   
@@ -85,7 +80,7 @@ function FTE(config) {
         self.templateList.dispatchEvent(templateChange);
       },
       function(response) {
-        console.log(response);
+        alert("Can't get template. Response status: "+xhr.status);
       });
   }
 	
@@ -94,10 +89,10 @@ function FTE(config) {
 	function patchTemplate(template, data) {
 		ajaxRequest('PATCH', this.config.serviceUrl+"?template="+template, data,
 		function(response) {
-			console.log(response.status);
+			alert('Success');
 		},
 		function(response) {
-			console.log(response);
+			alert("Can't update template. Response status: "+xhr.status);
 		});
 	}
   
@@ -278,13 +273,15 @@ function FTE(config) {
     var result;
     var lang;
     var i = 0;
+		var langKey = this.config.langKey.replace(/\$/g, '\\$');
+		
     // Search {if}
     for (i; i < strArr.length; i++) {
-    	result = strArr[i].match(/\{\s*if\s+\$lang\s*==\s*(\w+)\}/i);
+    	result = strArr[i].match( new RegExp('\\{\\s*if\\s+'+langKey+'\\s*==\\s*(\\w+)\\}', 'i') );
     	if (result) {
     		lang = result[1];
     		template[lang] = [];
-    		result = strArr[i].match(/\{\s*if\s+\$lang\s*==\s*\w+\}(.+)$/i);
+    		result = strArr[i].match( new RegExp('\\{\\s*if\\s+'+langKey+'\\s*==\\s*\\w+\\}(.+)$', 'i') );
     		if (result)
     			template[lang].push(result[1]);
     		i++;
@@ -295,14 +292,14 @@ function FTE(config) {
     for (i; i < strArr.length; i++) {
     	str = strArr[i];
     	// Search {else if}
-    	result = str.search(/\{\s*else\s*if\s*\$lang\s*==\s*\w+\}/i);
+    	result = str.search(new RegExp('\\{\\s*else\\s*if\\s*'+langKey+'\\s*==\\s*\\w+\\}', 'i') );
     	if (~result) {
-    		result = str.match(/^(.+)\{\s*else\s*if\s*\$lang\s*==\s*\w+\}/i);
+    		result = str.match( new RegExp('^(.+)\\{\\s*else\\s*if\\s*'+langKey+'\\s*==\\s*\\w+\\}', 'i') );
     		if ( result && lang ) template[lang].push( result[1] );
-    		result = strArr[i].match(/\{\s*else\s*if\s*\$lang\s*==\s*(\w+)\}/i);
+    		result = strArr[i].match( new RegExp('\\{\\s*else\\s*if\\s*'+langKey+'\\s*==\\s*(\\w+)\\}','i') );
     		lang = result[1];
     		template[lang] = [];
-    		result = str.match(/\{\s*else\s*if\s*\$lang\s*==\s*\w+\}(.+)$/i);
+    		result = str.match( new RegExp('\\{\\s*else\\s*if\\s*'+langKey+'\\s*==\\s*\\w+\\}(.+)$','i') );
     		if (!result) continue;
     		str = result[1];
     	}
@@ -317,7 +314,7 @@ function FTE(config) {
     		if (!result) continue;
     		str = result[1];
     	}
-    	//Search {/if}
+    	// Search {/if}
     	result = str.search(/\{\s*\/\s*if\s*\}/i);
     	if (~result) {
     		result = str.match(/^(.+)\{\s*\/\s*if\s*\}/i);
@@ -338,9 +335,9 @@ function FTE(config) {
 			if (lang == self.config.defaultLang) continue;
 			
 			if (!str) {
-				str = '{if $lang==' + lang + '}\r\n';
+				str = '{if ' +this.config.langKey+ '==' +lang+ '}\r\n';
 			} else {
-				str += '{elseif $lang==' + lang + '}\r\n';
+				str += '{elseif ' +this.config.langKey+ '==' +lang+ '}\r\n';
 			}
 			str += template[lang].join('\r\n');
 		}
@@ -390,9 +387,6 @@ function FTE(config) {
 		var result = template.match(/^\<p\>(.*)\<\/p\>$/);								// remove first <p> and last </p>
 		template = result ? result[1] : template;													// if they exist
 		template = template.split('</p><p>').join('<br>').split('<br>');	// </p><p> == <br> => new line
-/* 		template.forEach(function(item, i, arr) {
-			arr[i] = item + '\r\n';
-		}); */
 		
 		return template;
 	}
