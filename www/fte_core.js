@@ -221,6 +221,9 @@ function FTE(config) {
     		self.variableField.appendChild( new self.view.MenuButton( key, self.model.variables[key][lang], 'variable') );
     	};
 			
+			// Test button
+			// self.variableField.appendChild( new self.view.MenuButton( 'test', 'test', 'test') );
+			
 			self.templateField.innerHTML = parseLinesIn(self.model.template[self.languageList.value]);
 			
 			self.editField.appendChild( new self.view.MenuButton('save', lang=='ru'?'Сохранить':'Save', 'edit') );
@@ -242,6 +245,13 @@ function FTE(config) {
 					patchTemplate(self.templateList.value, data);
 					break;
 				}
+				
+				// if (target.dataset.buttonName && hasClass(target, 'test')) {//test
+				// var sel = window.getSelection ? window.getSelection() : document.selection.createRange();
+				// if ( self.templateField.contains(sel.anchorNode) && self.templateField.contains(sel.focusNode) )
+					// console.log(1);
+				// }
+				
 				target = target.parentNode;
 			}
 		});
@@ -393,11 +403,12 @@ function FTE(config) {
 	
 	// Caret functions
 	function addVariable(name, caption) {
-		if (!self.templateField.contentEditable/*заменить проверкой места курсора*/) {
-			return false;
-		} else {
-      var varCode = self.view.variableSpan(name, caption);
+		var sel =  window.getSelection ? window.getSelection() : document.selection.createRange();
+		if (self.templateField.contains(sel.anchorNode) && self.templateField.contains(sel.focusNode)) {
+			var varCode = self.view.variableSpan(name, caption);
       pasteHtmlAtCaret(varCode);
+		} else {
+      return false;
     }
 	}
 	
