@@ -303,7 +303,7 @@ function FTE(config) {
 		for (i; i < strArr.length; i++) {
 			str = strArr[i];
 			// Search {else if}
-			result = str.search(new RegExp('\\{\\s*else\\s*if\\s*'+langKey+'\\s*==\\s*\\w+\\}', 'i') );
+			result = str.search( new RegExp('\\{\\s*else\\s*if\\s*'+langKey+'\\s*==\\s*\\w+\\}', 'i') );
 			if (~result) {
 				result = str.match( new RegExp('^(.+)\\{\\s*else\\s*if\\s*'+langKey+'\\s*==\\s*\\w+\\}', 'i') );
 				if ( result && lang ) template[lang].push( result[1] );
@@ -350,7 +350,7 @@ function FTE(config) {
 			} else {
 				str += '{elseif ' +this.config.langKey+ '==' +lang+ '}' + this.config.delimeter;
 			}
-			str += template[lang].join(delmeter);
+			str += template[lang].join(this.config.delimeter);
 		}
 		if (template[self.config.defaultLang])
 			str += '{else}' + this.config.delimeter + template[self.config.defaultLang].join(this.config.delimeter);
