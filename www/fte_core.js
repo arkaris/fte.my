@@ -289,11 +289,11 @@ function FTE(config) {
 		
 		// Search {if}
 		for (i; i < strArr.length; i++) {
-			result = strArr[i].match( new RegExp('\\{\\s*if\\s+'+langKey+'\\s*==\\s*(\\w+)\\}?', 'i') );
+			result = strArr[i].match( new RegExp('\\{\\s*if\\s+'+langKey+'\\s*==\\s*(\\w+)\\}', 'i') );
 			if (result) {
 				lang = result[1];
 				template[lang] = [];
-				result = strArr[i].match( new RegExp('\\{\\s*if\\s+'+langKey+'\\s*==\\s*\\w+\\}?(.+)$', 'i') );
+				result = strArr[i].match( new RegExp('\\{\\s*if\\s+'+langKey+'\\s*==\\s*\\w+\\}(.+)$', 'i') );
 				if (result) strArr[i] = result[1]
 				else i++;
 				break;
@@ -303,32 +303,32 @@ function FTE(config) {
 		for (i; i < strArr.length; i++) {
 			str = strArr[i];
 			// Search {else if}
-			result = str.search(new RegExp('\\{\\s*else\\s*if\\s*'+langKey+'\\s*==\\s*\\w+\\}?', 'i') );
+			result = str.search(new RegExp('\\{\\s*else\\s*if\\s*'+langKey+'\\s*==\\s*\\w+\\}', 'i') );
 			if (~result) {
-				result = str.match( new RegExp('^(.+)\\{\\s*else\\s*if\\s*'+langKey+'\\s*==\\s*\\w+\\}?', 'i') );
+				result = str.match( new RegExp('^(.+)\\{\\s*else\\s*if\\s*'+langKey+'\\s*==\\s*\\w+\\}', 'i') );
 				if ( result && lang ) template[lang].push( result[1] );
-				result = strArr[i].match( new RegExp('\\{\\s*else\\s*if\\s*'+langKey+'\\s*==\\s*(\\w+)\\}?','i') );
+				result = strArr[i].match( new RegExp('\\{\\s*else\\s*if\\s*'+langKey+'\\s*==\\s*(\\w+)\\}','i') );
 				lang = result[1];
 				template[lang] = [];
-				result = str.match( new RegExp('\\{\\s*else\\s*if\\s*'+langKey+'\\s*==\\s*\\w+\\}?(.+)$','i') );
+				result = str.match( new RegExp('\\{\\s*else\\s*if\\s*'+langKey+'\\s*==\\s*\\w+\\}(.+)$','i') );
 				if (!result) continue;
 				str = result[1];
 			}
 			// Search {else}
-			result = str.search(/\{\s*else\s*\}?/i);
+			result = str.search(/\{\s*else\s*\}/i);
 			if (~result) {
-				result = str.match(/^(.+)\{\s*else\s*\}?/i);
+				result = str.match(/^(.+)\{\s*else\s*\}/i);
 				if ( result && lang ) template[lang].push( result[1] );
 				lang = self.config.defaultLang;
 				template[lang] = [];
-				result = str.match(/\{\s*else\s*\}?(.+)$/i);
+				result = str.match(/\{\s*else\s*\}(.+)$/i);
 				if (!result) continue;
 				str = result[1];
 			}
 			// Search {/if}
-			result = str.search(/\{\s*\/\s*if\s*\}?/i);
+			result = str.search(/\{\s*\/\s*if\s*\}/i);
 			if (~result) {
-			result = str.match(/^(.+)\{\s*\/\s*if\s*\}?/i);
+			result = str.match(/^(.+)\{\s*\/\s*if\s*\}/i);
 				if ( result && lang ) template[lang].push( result[1] );
 				break;
 			}
