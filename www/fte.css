@@ -53,7 +53,7 @@
 
 .fte-container .templateContent {
   min-height: 100%;
-	width: 100%;
+	width: 100% !important;
   margin: 0;
-	display: inline-block;
+	display: inline-block !important;
 }
