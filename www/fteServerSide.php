@@ -5,20 +5,20 @@ class FTERequest {
       "fileName" => "testCP.tpl",
       "templateName" => "Тестовый шаблон 1",
       "variables" => array (
-        '{$user}' => array ("ru"=>"Дмитрий", "eng"=>"Dmitry"),
-        '{$site}' => array ("ru"=>"megaSite.ru", "eng"=>"megaSite.ru"),
-        '{$ex}'   => array ("ru"=>"Лучшая выставка", "eng"=>"Best exhibition"),
-				'{$email}'=> array ("ru"=>"our@email.ru", "eng"=>"our@email.ru")
+        '{$user}' => array ("rus"=>"Дмитрий", "eng"=>"Dmitry"),
+        '{$site}' => array ("rus"=>"megaSite.ru", "eng"=>"megaSite.ru"),
+        '{$ex}'   => array ("rus"=>"Лучшая выставка", "eng"=>"Best exhibition"),
+				'{$email}'=> array ("rus"=>"our@email.ru", "eng"=>"our@email.ru")
       )
     ),
     "testCP2" => array (
       "fileName" => "testCP.tpl",
       "templateName" => "Тестовый шаблон 2",
       "variables" => array (
-        '{$user}' => array ("ru"=>"Дмитрий", "eng"=>"Dmitry"),
-        '{$site}' => array ("ru"=>"megaSite.ru", "eng"=>"megaSite.ru"),
-        '{$ex}'   => array ("ru"=>"Лучшая выставка", "eng"=>"Best exhibition"),
-				'{$email}'=> array ("ru"=>"our@email.ru", "eng"=>"our@email.ru")
+        '{$user}' => array ("rus"=>"Дмитрий", "eng"=>"Dmitry"),
+        '{$site}' => array ("rus"=>"megaSite.ru", "eng"=>"megaSite.ru"),
+        '{$ex}'   => array ("rus"=>"Лучшая выставка", "eng"=>"Best exhibition"),
+				'{$email}'=> array ("rus"=>"our@email.ru", "eng"=>"our@email.ru")
       )
     )
   );

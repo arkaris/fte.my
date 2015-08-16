@@ -9,10 +9,10 @@ function fteGetConfig(){
 		//request data addres
 		serviceUrl: "FTEServerSide.php",
 		// Default language
-		defaultLang: 'ru',
+		defaultLang: 'rus',
 		// Language variable. Be careful with special chars!
 		langKey: '$lang',
-		// Delimeter
+		// Delimeter between template lines
 		delimeter: '\r\n'
 	};
 	
@@ -174,12 +174,12 @@ function FTE(config) {
 	this.hangDownEventListeners = function() {
 		
 		this.shell.addEventListener("templateListSync", function(e) {
-			self.templateList.innerHTML = '';
-			self.languageList.innerHTML = '';
-			self.variableField.innerHTML = '';
-			self.templateField.innerHTML = '';
-			self.editField.innerHTML = '';
-//    self.languageList.addClass('hide');
+//			self.templateList.innerHTML = '';
+//			self.languageList.innerHTML = '';
+//			self.variableField.innerHTML = '';
+//			self.templateField.innerHTML = '';
+//			self.editField.innerHTML = '';
+//	    self.languageList.addClass('hide');
 			for (var key in self.model.templateList) {
 				var opt = new Option(self.model.templateList[key], key);
 				self.templateList.appendChild(opt);
@@ -228,7 +228,7 @@ function FTE(config) {
 			
 			self.templateField.innerHTML = parseLinesIn(self.model.template[self.languageList.value]);
 			
-			self.editField.appendChild( new self.view.MenuButton('save', lang=='ru'?'Сохранить':'Save', 'edit') );
+			self.editField.appendChild( new self.view.MenuButton('save', lang=='rus'?'Сохранить':'Save', 'edit') );
 		});
 		
 		this.menuField.addEventListener("click", function(e) {
