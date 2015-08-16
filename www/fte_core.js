@@ -142,10 +142,10 @@ function FTE(config) {
 		
 		var templateField = document.createElement('div');
 		templateField.className = 'templateField';
-		templateField.contentEditable = true;
-		templateField.innerHTML = '<p><br></p>';
+		self.templateField = templateField.appendChild( document.createElement('p') );
+		self.templateField.contentEditable = true;
+		self.templateField.className = 'templateContent';
 		fragment.appendChild(templateField);
-		self.templateField = templateField;
 		
 		return fragment;
 	};
@@ -360,9 +360,9 @@ function FTE(config) {
 	}
 	
 	function parseVarIn(template, variables, fragment) {
-		for (var lang in template) {// For every template by lang
-			for (var i = 0; i < template[lang].length; i++) {// For every line in template
-				for (var variable in variables) {// For every variable[lang]
+		for (var lang in template) {												// For every template by lang
+			for (var i = 0; i < template[lang].length; i++) {	// For every line in template
+				for (var variable in variables) {								// For every variable[lang]
 					template[lang][i] = template[lang][i].replace( 
 						variable, fragment(variable, self.model.variables[variable][lang]) );
 				}
@@ -390,7 +390,6 @@ function FTE(config) {
 	
 	function parseLinesIn(template) {
 		template = template.join('<br>') || '<br>';
-		template = '<p>' + template + '</p>';
 		return template;
 	}
 	
