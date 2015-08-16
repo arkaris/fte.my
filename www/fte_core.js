@@ -142,10 +142,10 @@ function FTE(config) {
 		
 		var templateField = document.createElement('div');
 		templateField.className = 'templateField';
-		templateField.contentEditable = true;
-		templateField.innerHTML = '<p><br></p>';
+		self.templateField = templateField.appendChild( document.createElement('p') );
+		self.templateField.contentEditable = true;
+		self.templateField.className = 'templateContent';
 		fragment.appendChild(templateField);
-		self.templateField = templateField;
 		
 		return fragment;
 	};
@@ -390,7 +390,6 @@ function FTE(config) {
 	
 	function parseLinesIn(template) {
 		template = template.join('<br>') || '<br>';
-		template = '<p>' + template + '</p>';
 		return template;
 	}
 	
